@@ -11,7 +11,7 @@ SHEETY_STEM = 'https://api.sheety.co/d9f02081f9a01191e5a5c45c80a67854/flightDeal
 SHEETY_TOKEN = os.environ.get('SHEETY_TOKEN')
 data_manager = DataManager(SHEETY_STEM, SHEETY_TOKEN)
 
-FLIGHT_SEARCH_STEM = 'https://api.tequila.kiwi.com/locations/'
+FLIGHT_SEARCH_STEM = 'https://api.tequila.kiwi.com/locations'
 FLIGHT_SEARCH_TOKEN = os.environ.get('FLIGHT_SEARCH_API_KEY')
 flight_search = FlightSearch(FLIGHT_SEARCH_STEM, FLIGHT_SEARCH_TOKEN)
 
@@ -40,17 +40,7 @@ if sheet_data['prices'][0]['iataCode'] == '':
 
 
 
-# params = {
-#     'fly_from':'',
-#     'fly_to': 'San Diego',
-#     'date_from': '07/06/2024',
-#     'date_to': '10/06/2024',
-#     'adults': '2'
-# }
-params = {
-    'term': 'San Diego',
-    'location_types': 'city'
-}
+
 
 url = 'https://api.tequila.kiwi.com/locations/query'
 # response = requests.get(url=url, params=params, headers=headers)
