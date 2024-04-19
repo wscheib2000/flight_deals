@@ -1,54 +1,40 @@
-#This file will need to use the DataManager,FlightSearch, FlightData, NotificationManager classes to achieve the program requirements.
-
 from dotenv import load_dotenv
 import os
 import requests
+from data_manager import DataManager
+from flight_search import FlightSearch
+
 
 load_dotenv()
 
-FLIGHT_SEARCH_API_KEY = os.environ.get('FLIGHT_SEARCH_API_KEY')
+SHEETY_STEM = 'https://api.sheety.co/d9f02081f9a01191e5a5c45c80a67854/flightDeals (pythonProject)/prices'
 SHEETY_TOKEN = os.environ.get('SHEETY_TOKEN')
+data_manager = DataManager(SHEETY_STEM, SHEETY_TOKEN)
 
-sheety_stem = 'https://api.sheety.co/d9f02081f9a01191e5a5c45c80a67854/flightDeals (pythonProject)/prices'
-flight_search_stem = 'https://api.tequila.kiwi.com/locations/'
+FLIGHT_SEARCH_STEM = 'https://api.tequila.kiwi.com/locations/'
+FLIGHT_SEARCH_TOKEN = os.environ.get('FLIGHT_SEARCH_API_KEY')
+flight_search = FlightSearch(FLIGHT_SEARCH_STEM, FLIGHT_SEARCH_TOKEN)
 
 ### POPULATE IATA CODES
 # Pull all data from Google Sheet
-response = requests.get(url=sheety_stem)
-response.raise_for_status()
-cities_data = response.json()
+sheet_data = data_manager.get_data()
 
-# Iterate through cities and record country codes in Google Sheet
-for row in cities_data['prices']:
-    # Get IATA code for this city
-    headers = {
-        'accept': 'application/json',
-        'apikey': FLIGHT_SEARCH_API_KEY
-    }
-    params = {
-        'term': row['city'],
-        'location_types': 'city'
-    }
+if sheet_data['prices'][0]['iataCode'] == '':
+    # Iterate through cities and record country codes in Google Sheet
+    for row in sheet_data['prices']:
+        # Get IATA code for this city
+        flight_search.get_iata_code(row['city'])
 
-    response = requests.get(url=f'{flight_search_stem}query', params=params, headers=headers)
-    response.raise_for_status()
-    city_code = response.json()['locations'][0]['code']
-
-    # Update row in Google Sheet with IATA code
-    headers = {
-        'Authorization': SHEETY_TOKEN,
-        'Content-Type': 'application/json'
-    }
-    body = {
-        'price': {
-            'city': row['city'],
-            'iataCode': city_code,
-            'lowestPrice': row['lowestPrice']
+        # Update row in Google Sheet with IATA code
+        json = {
+            'price': {
+                'city': row['city'],
+                'iataCode': city_code,
+                'lowestPrice': row['lowestPrice']
+            }
         }
-    }
 
-    response = requests.put(url=f'{sheety_stem}/{row['id']}', json=body, headers=headers)
-    response.raise_for_status()
+        data_manager.update_row(json, row['id'])
 
 
 
