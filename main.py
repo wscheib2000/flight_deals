@@ -23,7 +23,7 @@ if sheet_data['prices'][0]['iataCode'] == '':
     # Iterate through cities and record country codes in Google Sheet
     for row in sheet_data['prices']:
         # Get IATA code for this city
-        flight_search.get_iata_code(row['city'])
+        city_code = flight_search.get_iata_code(row['city'])
 
         # Update row in Google Sheet with IATA code
         json = {
