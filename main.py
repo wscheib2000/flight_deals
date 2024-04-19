@@ -35,14 +35,3 @@ if sheet_data['prices'][0]['iataCode'] == '':
         }
 
         data_manager.update_row(json, row['id'])
-
-
-
-
-
-
-
-url = 'https://api.tequila.kiwi.com/locations/query'
-# response = requests.get(url=url, params=params, headers=headers)
-# response.raise_for_status()
-# print(response.text)
