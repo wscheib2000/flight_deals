@@ -1,8 +1,9 @@
 from dotenv import load_dotenv
 import os
-import requests
 from data_manager import DataManager
 from flight_search import FlightSearch
+from flight_data import find_cheapest_flight
+from notification_manager import NotificationManager
 
 
 load_dotenv()
@@ -11,9 +12,13 @@ SHEETY_STEM = 'https://api.sheety.co/d9f02081f9a01191e5a5c45c80a67854/flightDeal
 SHEETY_TOKEN = os.environ.get('SHEETY_TOKEN')
 data_manager = DataManager(SHEETY_STEM, SHEETY_TOKEN)
 
-FLIGHT_SEARCH_STEM = 'https://api.tequila.kiwi.com/locations'
-FLIGHT_SEARCH_TOKEN = os.environ.get('FLIGHT_SEARCH_API_KEY')
-flight_search = FlightSearch(FLIGHT_SEARCH_STEM, FLIGHT_SEARCH_TOKEN)
+AMADEUS_API_KEY = os.environ.get('AMADEUS_API_KEY')
+AMADEUS_API_SECRET = os.environ.get('AMADEUS_API_SECRET')
+flight_search = FlightSearch(AMADEUS_API_KEY, AMADEUS_API_SECRET)
+
+EMAIL = os.environ.get('EMAIL')
+EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+notification_manager = NotificationManager(EMAIL, EMAIL_PASSWORD)
 
 ### POPULATE IATA CODES
 # Pull all data from Google Sheet
@@ -35,3 +40,15 @@ if sheet_data['prices'][0]['iataCode'] == '':
         }
 
         data_manager.update_row(json, row['id'])
+
+sheet_data = data_manager.get_data()
+for i in range(len(sheet_data['prices'])):
+    code = sheet_data['prices'][i]['iataCode']
+    price = sheet_data['prices'][i]['lowestPrice']
+    data = flight_search.get_flights_next_6_mo(code)
+    cheapest_flight = find_cheapest_flight(data)
+
+    print(cheapest_flight.price, price)
+    if cheapest_flight.price != 'N/A' and cheapest_flight.price <= price:
+        print('hello')
+        notification_manager.send_email(cheapest_flight)
